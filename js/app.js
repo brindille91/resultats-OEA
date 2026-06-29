@@ -204,7 +204,8 @@ saveBtn.addEventListener("click", async () => {
 
   } catch (err) {
     console.error(err);
-    alert("Erreur lors de l'envoi");
+    alert("Erreur lors de l'envoi : " + err.message);
+    console.error(err);
     saveBtn.disabled = false;
     saveBtn.textContent = "💾 Enregistrer dans NocoDB";
   }
