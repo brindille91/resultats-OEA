@@ -161,3 +161,66 @@ document.addEventListener("paste", (event) => {
 
 addRow();
 loadFromLocal();
+const saveBtn = document.getElementById("saveBtn");
+
+// récupère toutes les données
+function buildPayload() {
+  const rows = getData();
+
+  const date = document.getElementById("date").value;
+  const epreuve = document.getElementById("epreuve").value;
+  const distance = document.getElementById("distance").value;
+
+  return rows.map(r => ({
+    Date: date,
+    Epreuve: epreuve,
+    Distance: distance,
+    Classement: r.classement,
+    Nom: r.nom,
+    Temps: r.temps,
+    Distinctions: r.distinction
+  }));
+}
+
+// clic sauvegarde
+saveBtn.addEventListener("click", async () => {
+  try {
+    const payload = buildPayload();
+
+    if (payload.length === 0) {
+      alert("Aucune donnée à envoyer");
+      return;
+    }
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Envoi en cours...";
+
+    const result = await sendToNocoDB(payload);
+
+    alert(`✔ ${payload.length} résultats envoyés`);
+
+    saveBtn.disabled = false;
+    saveBtn.textContent = "💾 Enregistrer dans NocoDB";
+
+  } catch (err) {
+    console.error(err);
+    alert("Erreur lors de l'envoi");
+    saveBtn.disabled = false;
+    saveBtn.textContent = "💾 Enregistrer dans NocoDB";
+  }
+});
+async function sendToNocoDB(payload) {
+  const res = await fetch("/.netlify/functions/save", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!res.ok) {
+    throw new Error(await res.text());
+  }
+
+  return res.json();
+}
