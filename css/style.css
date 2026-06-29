@@ -1,0 +1,62 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background: #f6f7fb;
+  color: #222;
+}
+
+.app-header {
+  background: #1f2937;
+  color: white;
+  padding: 15px 20px;
+}
+
+.container {
+  padding: 20px;
+  max-width: 1000px;
+  margin: auto;
+}
+
+.course-info {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+input {
+  padding: 8px;
+  font-size: 14px;
+  margin-top: 5px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+th {
+  background: #f0f0f0;
+}
+
+button {
+  margin-top: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+.actions {
+  margin-top: 20px;
+}
