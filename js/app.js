@@ -199,6 +199,15 @@ saveBtn.addEventListener("click", async () => {
 
     alert(`✔ ${payload.length} résultats envoyés`);
 
+    // vider la grille
+    document.getElementById("resultsBody").innerHTML = "";
+
+    // remettre une ligne vide
+    addRow();
+
+    // sauvegarde état vide
+    saveToLocal();
+
     saveBtn.disabled = false;
     saveBtn.textContent = "💾 Enregistrer dans NocoDB";
 
@@ -225,3 +234,21 @@ async function sendToNocoDB(payload) {
 
   return res.json();
 }
+const newCourseBtn = document.getElementById("newCourseBtn");
+
+newCourseBtn.addEventListener("click", () => {
+  const confirmReset = confirm("Créer une nouvelle course ? Toutes les lignes actuelles seront supprimées.");
+
+  if (!confirmReset) return;
+
+  // reset champs course
+  document.getElementById("epreuve").value = "";
+  document.getElementById("distance").value = "";
+
+  // reset tableau
+  document.getElementById("resultsBody").innerHTML = "";
+  addRow();
+
+  // sauvegarde
+  saveToLocal();
+});
