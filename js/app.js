@@ -29,9 +29,7 @@ function addRow(data = {}) {
 
   const deleteBtn = document.createElement("button");
   deleteBtn.textContent = "❌";
-  deleteBtn.addEventListener("click", () => {
-    tr.remove();
-  });
+  deleteBtn.addEventListener("click", () => tr.remove());
 
   tdDelete.appendChild(deleteBtn);
 
@@ -44,8 +42,35 @@ function addRow(data = {}) {
   tbody.appendChild(tr);
 }
 
-// Ajouter ligne
+// ajouter ligne manuelle
 addRowBtn.addEventListener("click", () => addRow());
 
 // ligne initiale
 addRow();
+
+
+// ================================
+// 📋 COLLER EXCEL
+// ================================
+
+document.addEventListener("paste", (event) => {
+  const text = event.clipboardData.getData("text/plain");
+
+  if (!text) return;
+
+  const lines = text.split("\n").filter(l => l.trim() !== "");
+
+  lines.forEach(line => {
+    const cols = line.split("\t"); // Excel = tabulation
+
+    // Format attendu :
+    // classement | nom | temps | distinction
+
+    addRow({
+      classement: cols[0] || "",
+      nom: cols[1] || "",
+      temps: cols[2] || "",
+      distinction: cols[3] || ""
+    });
+  });
+});
