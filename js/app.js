@@ -1,78 +1,94 @@
+// ================================
+// LOGIN SIMPLE
+// ================================
+const PASSWORD = "OEA-2026?"; // 🔒 change ici
+
+const loginScreen = document.getElementById("loginScreen");
+const app = document.getElementById("app");
+const loginBtn = document.getElementById("loginBtn");
+
+loginBtn.addEventListener("click", () => {
+  const input = document.getElementById("passwordInput").value;
+
+  if (input === PASSWORD) {
+    loginScreen.style.display = "none";
+    app.style.display = "block";
+  } else {
+    document.getElementById("loginError").textContent =
+      "Mot de passe incorrect";
+  }
+});
+
+
+// ================================
+// APP LOGIC
+// ================================
 const tbody = document.getElementById("resultsBody");
 const addRowBtn = document.getElementById("addRowBtn");
+const saveBtn = document.getElementById("saveBtn");
+const newCourseBtn = document.getElementById("newCourseBtn");
 
 const STORAGE_KEY = "resultats_courses_draft";
 
-// ================================
-// OUTILS
-// ================================
 
+// ================================
+// CELLULE
+// ================================
 function createCell(value = "") {
   const input = document.createElement("input");
   input.type = "text";
   input.value = value;
 
-  // sauvegarde à chaque saisie
   input.addEventListener("input", saveToLocal);
 
   return input;
 }
 
+
 // ================================
 // AJOUT LIGNE
 // ================================
-
 function addRow(data = {}) {
   const tr = document.createElement("tr");
 
-  const tdClassement = document.createElement("td");
-  const tdNom = document.createElement("td");
-  const tdTemps = document.createElement("td");
-  const tdDistinction = document.createElement("td");
-  const tdDelete = document.createElement("td");
+  const td1 = document.createElement("td");
+  const td2 = document.createElement("td");
+  const td3 = document.createElement("td");
+  const td4 = document.createElement("td");
+  const td5 = document.createElement("td");
 
-  const classement = createCell(data.classement);
-  const nom = createCell(data.nom);
-  const temps = createCell(data.temps);
-  const distinction = createCell(data.distinction);
+  td1.appendChild(createCell(data.classement));
+  td2.appendChild(createCell(data.nom));
+  td3.appendChild(createCell(data.temps));
+  td4.appendChild(createCell(data.distinction));
 
-  tdClassement.appendChild(classement);
-  tdNom.appendChild(nom);
-  tdTemps.appendChild(temps);
-  tdDistinction.appendChild(distinction);
+  const del = document.createElement("button");
+  del.textContent = "❌";
 
-  const deleteBtn = document.createElement("button");
-  deleteBtn.textContent = "❌";
-
-  deleteBtn.addEventListener("click", () => {
+  del.onclick = () => {
     tr.remove();
     saveToLocal();
-  });
+  };
 
-  tdDelete.appendChild(deleteBtn);
+  td5.appendChild(del);
 
-  tr.appendChild(tdClassement);
-  tr.appendChild(tdNom);
-  tr.appendChild(tdTemps);
-  tr.appendChild(tdDistinction);
-  tr.appendChild(tdDelete);
-
+  tr.append(td1, td2, td3, td4, td5);
   tbody.appendChild(tr);
 
   saveToLocal();
 }
 
-// ================================
-// EXTRACTION DONNÉES
-// ================================
 
+// ================================
+// EXTRACTION
+// ================================
 function getData() {
   const rows = [];
 
   tbody.querySelectorAll("tr").forEach(tr => {
     const inputs = tr.querySelectorAll("input");
 
-    if (inputs.length === 0) return;
+    if (inputs.length < 4) return;
 
     rows.push({
       classement: inputs[0].value,
@@ -85,28 +101,27 @@ function getData() {
   return rows;
 }
 
+
 // ================================
 // SAUVEGARDE LOCAL
 // ================================
-
 function saveToLocal() {
   const data = {
-    rows: getData(),
     date: document.getElementById("date").value,
     epreuve: document.getElementById("epreuve").value,
-    distance: document.getElementById("distance").value
+    distance: document.getElementById("distance").value,
+    rows: getData()
   };
 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
-// ================================
-// RESTAURATION
-// ================================
 
+// ================================
+// RESTORE
+// ================================
 function loadFromLocal() {
   const raw = localStorage.getItem(STORAGE_KEY);
-
   if (!raw) return;
 
   const data = JSON.parse(raw);
@@ -117,61 +132,44 @@ function loadFromLocal() {
 
   tbody.innerHTML = "";
 
-  (data.rows || []).forEach(row => addRow(row));
+  (data.rows || []).forEach(addRow);
 }
 
-// ================================
-// EVENTS
-// ================================
-
-addRowBtn.addEventListener("click", () => addRow());
-
-// sauvegarde champs haut
-["date", "epreuve", "distance"].forEach(id => {
-  document.getElementById(id).addEventListener("input", saveToLocal);
-});
 
 // ================================
-// PASTE EXCEL (inchangé)
+// NOCODB
 // ================================
-
-document.addEventListener("paste", (event) => {
-  const text = event.clipboardData.getData("text/plain");
-  if (!text) return;
-
-  const lines = text.split("\n").filter(l => l.trim() !== "");
-
-  lines.forEach(line => {
-    const cols = line.split("\t");
-
-    addRow({
-      classement: cols[0] || "",
-      nom: cols[1] || "",
-      temps: cols[2] || "",
-      distinction: cols[3] || ""
-    });
+async function sendToNocoDB(payload) {
+  const res = await fetch("/.netlify/functions/save", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
   });
 
-  saveToLocal();
-});
+  const data = await res.json();
+
+  if (!res.ok) throw new Error(JSON.stringify(data));
+
+  return data;
+}
+
 
 // ================================
-// INIT
+// SAVE BUTTON
 // ================================
-
-addRow();
-loadFromLocal();
-const saveBtn = document.getElementById("saveBtn");
-
-// récupère toutes les données
-function buildPayload() {
+saveBtn.addEventListener("click", async () => {
   const rows = getData();
+
+  if (rows.length === 0) {
+    alert("Aucune donnée");
+    return;
+  }
 
   const date = document.getElementById("date").value;
   const epreuve = document.getElementById("epreuve").value;
   const distance = document.getElementById("distance").value;
 
-  return rows.map(r => ({
+  const payload = rows.map(r => ({
     Date: date,
     Epreuve: epreuve,
     Distance: distance,
@@ -180,75 +178,73 @@ function buildPayload() {
     Temps: r.temps,
     Distinctions: r.distinction
   }));
-}
 
-// clic sauvegarde
-saveBtn.addEventListener("click", async () => {
   try {
-    const payload = buildPayload();
-
-    if (payload.length === 0) {
-      alert("Aucune donnée à envoyer");
-      return;
-    }
-
     saveBtn.disabled = true;
-    saveBtn.textContent = "Envoi en cours...";
+    saveBtn.textContent = "Envoi...";
 
-    const result = await sendToNocoDB(payload);
+    await sendToNocoDB(payload);
 
-    alert(`✔ ${payload.length} résultats envoyés`);
+    alert("✔ Envoyé avec succès");
 
-    // vider la grille
-    document.getElementById("resultsBody").innerHTML = "";
-
-    // remettre une ligne vide
+    tbody.innerHTML = "";
     addRow();
-
-    // sauvegarde état vide
     saveToLocal();
 
-    saveBtn.disabled = false;
-    saveBtn.textContent = "💾 Enregistrer dans NocoDB";
-
   } catch (err) {
-    console.error(err);
     alert("Erreur lors de l'envoi : " + err.message);
-    console.error(err);
+  } finally {
     saveBtn.disabled = false;
     saveBtn.textContent = "💾 Enregistrer dans NocoDB";
   }
 });
-async function sendToNocoDB(payload) {
-  const res = await fetch("/.netlify/functions/save", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(payload)
-  });
 
-  if (!res.ok) {
-    throw new Error(await res.text());
-  }
 
-  return res.json();
-}
-const newCourseBtn = document.getElementById("newCourseBtn");
-
+// ================================
+// NOUVELLE COURSE
+// ================================
 newCourseBtn.addEventListener("click", () => {
-  const confirmReset = confirm("Créer une nouvelle course ? Toutes les lignes actuelles seront supprimées.");
+  if (!confirm("Nouvelle course ?")) return;
 
-  if (!confirmReset) return;
-
-  // reset champs course
   document.getElementById("epreuve").value = "";
   document.getElementById("distance").value = "";
-
-  // reset tableau
   document.getElementById("resultsBody").innerHTML = "";
-  addRow();
 
-  // sauvegarde
+  addRow();
   saveToLocal();
 });
+
+
+// ================================
+// EVENTS
+// ================================
+addRowBtn.addEventListener("click", () => addRow());
+
+["date", "epreuve", "distance"].forEach(id => {
+  document.getElementById(id).addEventListener("input", saveToLocal);
+});
+
+document.addEventListener("paste", (e) => {
+  const text = e.clipboardData.getData("text/plain");
+  if (!text) return;
+
+  text.split("\n").forEach(line => {
+    const cols = line.split("\t");
+
+    if (cols.length >= 2) {
+      addRow({
+        classement: cols[0],
+        nom: cols[1],
+        temps: cols[2],
+        distinction: cols[3]
+      });
+    }
+  });
+});
+
+
+// ================================
+// INIT
+// ================================
+addRow();
+loadFromLocal();

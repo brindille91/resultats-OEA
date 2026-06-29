@@ -10,6 +10,24 @@
 
 <body>
 
+<!-- =========================
+     LOGIN SIMPLE
+========================= -->
+<div id="loginScreen">
+  <h2>Accès sécurisé</h2>
+
+  <input type="password" id="passwordInput" placeholder="Mot de passe" />
+
+  <button id="loginBtn">Entrer</button>
+
+  <p id="loginError"></p>
+</div>
+
+<!-- =========================
+     APP
+========================= -->
+<div id="app" style="display:none;">
+
   <header class="app-header">
     <h1>Résultats des Courses</h1>
   </header>
@@ -37,7 +55,7 @@
 
     <section class="grid-section">
 
-      <table id="resultsTable">
+      <table>
         <thead>
           <tr>
             <th>Classement</th>
@@ -48,8 +66,7 @@
           </tr>
         </thead>
 
-       <tbody id="resultsBody" contenteditable="false"></tbody>
-
+        <tbody id="resultsBody"></tbody>
       </table>
 
       <button id="addRowBtn">+ Ajouter une ligne</button>
@@ -58,12 +75,16 @@
 
     <section class="actions">
 
-<button id="saveBtn">💾 Enregistrer dans NocoDB</button>
+      <button id="saveBtn">💾 Enregistrer dans NocoDB</button>
+      <button id="newCourseBtn">🔄 Nouvelle course</button>
+
     </section>
 
   </main>
 
-  <script src="js/app.js"></script>
+</div>
+
+<script src="js/app.js"></script>
 
 </body>
 </html>
